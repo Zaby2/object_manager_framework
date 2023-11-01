@@ -7,7 +7,9 @@ import lombok.SneakyThrows;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -18,17 +20,20 @@ public class ObjectFactory {
     // scanning for realisations of the ifc
     private Config config;
 
-
+    private List<ObjectConfigurator> configurators = new ArrayList<>();
     // Singleton part
     private static ObjectFactory ourInstance = new ObjectFactory();
     public static ObjectFactory getInstance() {
         return ourInstance;
     }
+
+    @SneakyThrows
     private ObjectFactory() {
-        config = new ConfigImpl("com.manager", new HashMap<>(Map.of(Controller.class, ControllerDownloaderImpl.class)));
+        config = new ConfigImpl("com.manager", new HashMap<>(Map.of(Controller.class, ControllerDownloaderImpl.class))); // in future we dont actually need to hardcode this line
+        for (Class<? extends ObjectConfigurator> aClass : config.getScanner().getSubTypesOf(ObjectConfigurator.class)) {
+            configurators.add(aClass.getDeclaredConstructor().newInstance());
+        }
     }
-
-
 
 
    // creating object of any type
@@ -43,18 +48,9 @@ public class ObjectFactory {
         T t = implClass.getDeclaredConstructor().newInstance();
 
         // we need to set our object before returning
+        // chains of responsibility pattern (many handlers for each object)
+        configurators.forEach(objectConfigurator -> objectConfigurator.configure(t));
 
-        for (Field field : implClass.getDeclaredFields()) {
-            InjectProperty annotation = field.getAnnotation(InjectProperty.class);
-            String path = ClassLoader.getSystemClassLoader().getResource("application.properties").getPath();
-            Stream<String> lines = new BufferedReader(new FileReader(path)).lines();
-            Map<String, String> propertyMap = lines.map(line -> line.split("=")).collect(toMap(arr -> arr[0], arr -> arr[1]));
-            if(annotation != null) {
-                String value = annotation.value().isEmpty() ? propertyMap.get(field.getName()) : propertyMap.get(annotation.value());
-                field.setAccessible(true);
-                field.set(t, value);
-            }
-        }
         return t;
     }
 }

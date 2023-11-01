@@ -9,6 +9,6 @@ public class RecommendatorImpl implements Recommendator {
     private String company;
     @Override
     public void recomend() {
-        System.out.println("The best company is" + company);
+        System.out.println("The best company is " + company);
     }
 }

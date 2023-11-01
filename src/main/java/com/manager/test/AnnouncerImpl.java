@@ -6,8 +6,7 @@ public class AnnouncerImpl implements Announcer {
     private Recommendator rec = ObjectFactory.getInstance().createObject(Recommendator.class);
 
     @Override
-    public void announce(String s) {
-        System.out.println(s);
+    public void announce(String s) {System.out.println(s + "!!!!");
         rec.recomend();
     }
 }

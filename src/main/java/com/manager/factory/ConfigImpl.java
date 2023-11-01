@@ -1,17 +1,19 @@
 package com.manager.factory;
 
+import lombok.Getter;
 import org.reflections.Reflections;
 
 import java.util.Map;
 import java.util.Set;
 
 public class ConfigImpl implements Config {
+    @Getter
     private Reflections scanner;
     private Map<Class, Class> ifc2implClass;
 
     public ConfigImpl(String packageToScan,Map<Class, Class> ifc2implClass ) {
-        this.scanner = new Reflections(packageToScan);
         this.ifc2implClass = ifc2implClass;
+        this.scanner = new Reflections(packageToScan);
     }
 
     @Override
